@@ -17,13 +17,18 @@ class DataCollector():
         rospy.init_node('datacollector', anonymous = True)
         self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
         self.sub = rospy.Subscriber('scan', LaserScan, self.collect_data)
+        self.sub = rospy.Subscriber('cmd_vel', Twist, self.get_teleop)
         self.scans = []
 
     def collect_data(self, msg):
-        self.scans.append(msg)
+        self.scans.append((msg, self.last_vel))
         print "starting pickle " + str(len(self.scans))
         pickle.dump( self.scans, open( "save.p", "wb" ) )
         print "pickle complete"
+
+    def get_teleop(self, msg):
+        # Get velocity here and save it
+        self.last_vel = msg
 
     def run(self):
         

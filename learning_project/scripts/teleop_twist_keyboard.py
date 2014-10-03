@@ -5,6 +5,7 @@ import rospy
 from geometry_msgs.msg import Twist
 
 import sys, select, termios, tty
+import pickle
 
 msg = """
 Reading from the keyboard  and Publishing to Twist!
@@ -64,6 +65,7 @@ if __name__=="__main__":
 	x = 0
 	th = 0
 	status = 0
+	twist_msgs = []
 
 	try:
 		print msg
@@ -90,6 +92,7 @@ if __name__=="__main__":
 			twist = Twist()
 			twist.linear.x = x*speed; twist.linear.y = 0; twist.linear.z = 0
 			twist.angular.x = 0; twist.angular.y = 0; twist.angular.z = th*turn
+			twist_msgs.append(twist)
 			pub.publish(twist)
 
 	except:
@@ -99,6 +102,9 @@ if __name__=="__main__":
 		twist = Twist()
 		twist.linear.x = 0; twist.linear.y = 0; twist.linear.z = 0
 		twist.angular.x = 0; twist.angular.y = 0; twist.angular.z = 0
+		print "starting pickle " + str(len(twist_msgs))
+		pickle.dump(twist_msgs, open("twistmsgs.p","wb"))
+		print "finishing pickle"
 		pub.publish(twist)
 
     		termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
