@@ -55,16 +55,6 @@ class DataCollector():
             laserscan.append(float(0))
 
 
-        # Front right: 270-330
-
-        for i in range(60):
-            if msg.ranges[270+i] > 0:
-                fr.append(msg.ranges[270+i])
-        if len(fr) > 0:
-            laserscan.append(sum(fr)/float(len(fr)))
-        else:
-            laserscan.append(float(0))
-
         # Front left: 30-90
 
         for i in range(60):
@@ -72,16 +62,6 @@ class DataCollector():
                 fl.append(msg.ranges[30+i])
         if len(fl) > 0:
             laserscan.append(sum(fl)/float(len(fl)))
-        else:
-            laserscan.append(float(0))
-
-        # Back: 150-210
-
-        for i in range(60):
-            if msg.ranges[150+i] > 0:
-                bb.append(msg.ranges[150+i])
-        if len(bb) > 0:
-            laserscan.append(sum(bb)/float(len(bb)))
         else:
             laserscan.append(float(0))
 
@@ -95,6 +75,17 @@ class DataCollector():
         else:
             laserscan.append(float(0))
 
+        # Back: 150-210
+
+        for i in range(60):
+            if msg.ranges[150+i] > 0:
+                bb.append(msg.ranges[150+i])
+        if len(bb) > 0:
+            laserscan.append(sum(bb)/float(len(bb)))
+        else:
+            laserscan.append(float(0))
+
+
         # Back left: 210-270
 
         for i in range(60):
@@ -102,6 +93,16 @@ class DataCollector():
                 bl.append(msg.ranges[210+i])
         if len(bl) > 0:
             laserscan.append(sum(bl)/float(len(bl)))
+        else:
+            laserscan.append(float(0))
+
+        # Front right: 270-330
+
+        for i in range(60):
+            if msg.ranges[270+i] > 0:
+                fr.append(msg.ranges[270+i])
+        if len(fr) > 0:
+            laserscan.append(sum(fr)/float(len(fr)))
         else:
             laserscan.append(float(0))
 
