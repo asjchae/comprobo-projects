@@ -14,3 +14,6 @@ def unpack():
 
             laserdata.append(laserMsg.ranges)
             twist_messages.append([twist.linear.x,twist.angular.z])
+
+        regr = linear_model.Ridge(alpha=.1)
+        regr.fit(laser_data,twist_messages)
