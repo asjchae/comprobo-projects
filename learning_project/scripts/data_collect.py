@@ -1,5 +1,5 @@
-googg#!/usr/bin/env python
-# Software License Agreement (BSD License
+#!/usr/bin/env python
+# Software License Agreement (BSD License)
 
 
 import rospy
@@ -19,6 +19,7 @@ class DataCollector():
         self.sub = rospy.Subscriber('scan', LaserScan, self.collect_data)
         self.sub = rospy.Subscriber('cmd_vel', Twist, self.get_teleop)
         self.scans = []
+        self.last_vel = Twist()
 
     def collect_data(self, msg):
 
@@ -29,17 +30,7 @@ class DataCollector():
         br = [] # back right
         bl = [] # back left
 
-        laserscan = []
-
-        for i in range(15):
-            if msg.ranges[344+i] > 0:
-                check_front.append(msg.ranges[344+i])
-            if msg.ranges[15-i] > 0:
-                check_front.append(msg.ranges[15-i])
-        if len(check_front) > 0:
-            self.front_distance = sum(check_front)/float(len(check_front)
-
-        
+        laserscan = []        
 
         # Averaging the laser scan.
         # Front: 330-360, 0-30
@@ -106,24 +97,24 @@ class DataCollector():
         else:
             laserscan.append(float(0))
 
-        print laserscan
-
         self.scans.append((laserscan, self.last_vel))
-        print "starting pickle " + str(len(self.scans))
-        pickle.dump( self.scans, open( "save.p", "wb" ) )
-        print "pickle complete"
+
+        if len(self.scans) == 50:
+            print "starting pickle " + str(len(self.scans))
+            pickle.dump(self.scans, open( "neato_data.p", "a" ) )
+            print "pickle complete"
 
     def get_teleop(self, msg):
         # Get velocity here and save it
         self.last_vel = msg
+        return self.last_vel
 
     def run(self):
         
         r = rospy.Rate(10) # 10hz
 
         while not rospy.is_shutdown():
-            move_msg = Twist(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, 0.0))
-            self.pub.publish(move_msg)
+            # Should do something.
             r.sleep()
 
 

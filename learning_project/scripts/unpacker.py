@@ -1,3 +1,5 @@
+import pickle
+from sklearn import linear_model
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
 
@@ -20,3 +22,5 @@ def unpack():
 
         print "here"
         print regr
+
+unpack()
