@@ -45,7 +45,6 @@ class DataCollector():
         else:
             laserscan.append(float(0))
 
-
         # Front left: 30-90
 
         for i in range(60):
@@ -98,6 +97,8 @@ class DataCollector():
             laserscan.append(float(0))
 
         self.scans.append((laserscan, self.last_vel))
+
+        print len(self.scans)
 
         if len(self.scans) == 50:
             print "starting pickle " + str(len(self.scans))

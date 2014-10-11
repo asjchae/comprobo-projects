@@ -3,6 +3,9 @@
 
 
 import pickle
+import rospy
+from sensor_msgs.msg import LaserScan
+from geometry_msgs.msg import Twist
 
 
 class RobotMover():
@@ -10,8 +13,8 @@ class RobotMover():
     def __init__(self):
         rospy.init_node('robotmover', anonymous = True)
         self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+        self.sub = rospy.Subscriber('scan', LaserScan, self.collect_data)
         self.sub = rospy.Subscriber('scan', LaserScan, self.run_regression)
-        # self.sub = rospy.Subscriber('cmd_vel', Twist, self.get_teleop)
         self.scans = []
 
     def collect_data(self, msg):
@@ -90,17 +93,24 @@ class RobotMover():
         else:
             laserscan.append(float(0))
 
-        self.scans.append((laserscan, self.last_vel))
+        self.scans.append(laserscan)
 
+    
     def run_regression(self, msg):
         global vel, turning
 
         with open('regr_data.p', 'rb') as f:
-            rdata = pickle.load(f)
-            ndata = tuple(x[0] for x in self.scans)
+            regr = pickle.load(f)
+            rdata = regr.coef_[0]
+            ndata = self.scans
+
             moving = []
 
             for i in range(len(rdata)):
+                print rdata[i]
+                print "rdata"
+                print ndata[i]
+                print "ndata"
                 moving = moving.append(rdata[i]*ndata[i])
 
             max_ind = moving.index(moving.max())
@@ -118,7 +128,7 @@ class RobotMover():
                 turning = 1
 
             if max_ind == 3:
-                vel = -moving[3]
+                vel = moving[3]
                 turning = 0
                 
             if max_ind == 4:
@@ -129,13 +139,16 @@ class RobotMover():
                 vel = moving[5]
                 turning = 1
 
+            msg = Twist(Vector3(vel,0.0,0.0),Vector3(0.0,0.0,turning))
+            pub.publish(msg)
+
     def run(self):
         global vel, turning
         r = rospy.Rate(10) # 10hz
 
         while not rospy.is_shutdown():
-            msg = Twist(Vector3(vel,0.0,0.0),Vector3(0.0,0.0,turning))
-            pub.publish(msg)
+            # msg = Twist(Vector3(vel,0.0,0.0),Vector3(0.0,0.0,turning))
+            # pub.publish(msg)
             r.sleep()
 
 
