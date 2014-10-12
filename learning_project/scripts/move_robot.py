@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # Software License Agreement (BSD License)
 
+# Collects laser scan from the robot
+# Uses regression fit to adjust the velocity of the robot based on its laser scan
 
 import pickle
 import rospy
@@ -102,15 +104,11 @@ class RobotMover():
         ndata = laserscan
         moving = [0.0,0.0,0.0,0.0,0.0,0.0]
 
-        for i in range(len(rdata)):
-            moving[i] = ((1/rdata[i]*5)*ndata[i])
-            # print moving
 
-        if len(moving) == 6:
-            print moving[0]
-            print ndata[0]
-            print "meow"
-            max_ind = moving.index(max(moving))
+        # using regression data to control the neato
+        for i in range(len(rdata)):
+            print intercept
+            moving[i] = (rdata[i]*(intercept+ndata[i]))
 
             msg = Twist(Vector3(float(moving[0]),0.0,0.0),Vector3(0.0,0.0,0.0))
             self.pub.publish(msg)

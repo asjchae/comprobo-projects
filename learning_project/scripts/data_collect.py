@@ -2,6 +2,10 @@
 # Software License Agreement (BSD License)
 
 
+# Collects training data for supervised learning.
+# Saves the laser scan reading and the corresponding linear/angular velocity as a tuple.
+# After 50 readings, saves all the data in a pickle file.
+
 import rospy
 import math
 import pickle
@@ -98,8 +102,8 @@ class DataCollector():
 
         self.scans.append((laserscan, self.last_vel))
 
-        print len(self.scans)
 
+        # Saving to a pickle file
         if len(self.scans) == 50:
             print "starting pickle " + str(len(self.scans))
             pickle.dump(self.scans, open( "neato_data.p", "a" ) )
@@ -115,7 +119,6 @@ class DataCollector():
         r = rospy.Rate(10) # 10hz
 
         while not rospy.is_shutdown():
-            # Should do something.
             r.sleep()
 
 
