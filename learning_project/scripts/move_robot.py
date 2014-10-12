@@ -6,6 +6,7 @@ import pickle
 import rospy
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Vector3
 
 
 class RobotMover():
@@ -97,43 +98,22 @@ class RobotMover():
             laserscan.append(float(0))
 
         rdata = self.regr.coef_[0]
+        intercept = self.regr.intercept_[0]
         ndata = laserscan
-        moving = []
+        moving = [0.0,0.0,0.0,0.0,0.0,0.0]
 
         for i in range(len(rdata)):
-            # print rdata[i]
-            print rdata[i]*ndata[i]
+            moving[i] = ((1/rdata[i]*5)*ndata[i])
+            # print moving
+
+        if len(moving) == 6:
+            print moving[0]
+            print ndata[0]
             print "meow"
-            moving = moving.append(rdata[i]*ndata[i])
+            max_ind = moving.index(max(moving))
 
-        max_ind = moving.index(moving.max())
-
-        if max_ind == 0:
-            vel = moving[0]
-            turning = 0
-
-        if max_ind == 1:
-            vel = moving[1]
-            turning = 1
-            
-        if max_ind == 2:
-            vel = moving[2]
-            turning = 1
-
-        if max_ind == 3:
-            vel = moving[3]
-            turning = 0
-            
-        if max_ind == 4:
-            vel = moving[4]
-            turning = 1
-
-        if max_ind == 5:
-            vel = moving[5]
-            turning = 1
-
-        msg = Twist(Vector3(vel,0.0,0.0),Vector3(0.0,0.0,turning))
-        pub.publish(msg)
+            msg = Twist(Vector3(float(moving[0]),0.0,0.0),Vector3(0.0,0.0,0.0))
+            self.pub.publish(msg)
 
     def run(self):
         r = rospy.Rate(10) # 10hz
