@@ -14,8 +14,10 @@ class RobotMover():
         rospy.init_node('robotmover', anonymous = True)
         self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
         self.sub = rospy.Subscriber('scan', LaserScan, self.run_regression)
-        self.vel =
-        self.turning =
+        self.vel = 0.0
+        self.turning = 0.0
+        with open('regr_data.p', 'rb') as f:
+            self.regr = pickle.load(f)
 
     
     def run_regression(self, msg):
@@ -94,49 +96,44 @@ class RobotMover():
         else:
             laserscan.append(float(0))
 
+        rdata = self.regr.coef_[0]
+        ndata = laserscan
+        moving = []
 
-        with open('regr_data.p', 'rb') as f:
-            regr = pickle.load(f)
-            rdata = regr.coef_[0]
-            ndata = laserscan
+        for i in range(len(rdata)):
+            # print rdata[i]
+            print rdata[i]*ndata[i]
+            print "meow"
+            moving = moving.append(rdata[i]*ndata[i])
 
-            moving = []
+        max_ind = moving.index(moving.max())
 
-            for i in range(len(rdata)):
-                print rdata[i]
-                print "rdata"
-                print ndata[i]
-                print "ndata"
-                moving = moving.append(rdata[i]*ndata[i])
+        if max_ind == 0:
+            vel = moving[0]
+            turning = 0
 
-            max_ind = moving.index(moving.max())
+        if max_ind == 1:
+            vel = moving[1]
+            turning = 1
+            
+        if max_ind == 2:
+            vel = moving[2]
+            turning = 1
 
-            if max_ind == 0:
-                vel = moving[0]
-                turning = 0
+        if max_ind == 3:
+            vel = moving[3]
+            turning = 0
+            
+        if max_ind == 4:
+            vel = moving[4]
+            turning = 1
 
-            if max_ind == 1:
-                vel = moving[1]
-                turning = 1
-                
-            if max_ind == 2:
-                vel = moving[2]
-                turning = 1
+        if max_ind == 5:
+            vel = moving[5]
+            turning = 1
 
-            if max_ind == 3:
-                vel = moving[3]
-                turning = 0
-                
-            if max_ind == 4:
-                vel = moving[4]
-                turning = 1
-
-            if max_ind == 5:
-                vel = moving[5]
-                turning = 1
-
-            msg = Twist(Vector3(vel,0.0,0.0),Vector3(0.0,0.0,turning))
-            pub.publish(msg)
+        msg = Twist(Vector3(vel,0.0,0.0),Vector3(0.0,0.0,turning))
+        pub.publish(msg)
 
     def run(self):
         r = rospy.Rate(10) # 10hz
