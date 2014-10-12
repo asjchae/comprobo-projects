@@ -103,14 +103,14 @@ class RobotMover():
         moving = [0.0,0.0,0.0,0.0,0.0,0.0]
 
         for i in range(len(rdata)):
-            moving[i] = ((1/rdata[i]*5)*ndata[i])
+            print intercept
+            moving[i] = (rdata[i]*(intercept+ndata[i]))
             # print moving
 
-        if len(moving) == 6:
             print moving[0]
             print ndata[0]
             print "meow"
-            max_ind = moving.index(max(moving))
+
 
             msg = Twist(Vector3(float(moving[0]),0.0,0.0),Vector3(0.0,0.0,0.0))
             self.pub.publish(msg)
