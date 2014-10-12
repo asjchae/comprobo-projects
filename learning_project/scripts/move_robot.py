@@ -13,11 +13,12 @@ class RobotMover():
     def __init__(self):
         rospy.init_node('robotmover', anonymous = True)
         self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
-        self.sub = rospy.Subscriber('scan', LaserScan, self.collect_data)
         self.sub = rospy.Subscriber('scan', LaserScan, self.run_regression)
-        self.scans = []
+        self.vel =
+        self.turning =
 
-    def collect_data(self, msg):
+    
+    def run_regression(self, msg):
 
         ff = [] # front front
         fr = [] # front right
@@ -93,16 +94,11 @@ class RobotMover():
         else:
             laserscan.append(float(0))
 
-        self.scans.append(laserscan)
-
-    
-    def run_regression(self, msg):
-        global vel, turning
 
         with open('regr_data.p', 'rb') as f:
             regr = pickle.load(f)
             rdata = regr.coef_[0]
-            ndata = self.scans
+            ndata = laserscan
 
             moving = []
 
@@ -143,7 +139,6 @@ class RobotMover():
             pub.publish(msg)
 
     def run(self):
-        global vel, turning
         r = rospy.Rate(10) # 10hz
 
         while not rospy.is_shutdown():
