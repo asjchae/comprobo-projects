@@ -47,14 +47,21 @@ class FootprintFinder():
             # blob_img = cv2.drawKeypoints(cv_image,blob,None,(255,0,0),4)
 
         # in range and find contours
-        # use cvtColor to change to HSV colors
-        lower = np.array([0,200,200], "uint8")
-        upper =np.array([0,255,255], "uint8")
+        # use cvtColor to change to HSV colors if necessary
+
+
+        # Guessing at our pink feet
+        # lower = np.array([150,0,180], "uint8")
+        # upper =np.array([204,81,255], "uint8")
+
+        # Red from train example
+        lower = np.array([17,15,100], "uint8")
+        upper =np.array([50,56,200], "uint8")
+
         blob = cv2.inRange(cv_image, lower, upper)
         blob_img = cv2.bitwise_and(cv_image, cv_image, mask = blob)
 
-        cv2.imshow("Image", blob)
-
+        cv2.imshow("Original and Blobbed", np.hstack([cv_image, blob_img]))
         cv2.waitKey(3)
 
     def run(self):
