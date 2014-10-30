@@ -13,6 +13,7 @@ import rospy
 import numpy as np
 import argparse
 import cv2
+import cv
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
@@ -56,13 +57,45 @@ class FootprintFinder():
 
         # Red from train example
         lower = np.array([17,15,100], "uint8")
-        upper =np.array([50,56,200], "uint8")
+        upper = np.array([50,56,200], "uint8")
 
         blob = cv2.inRange(cv_image, lower, upper)
         blob_img = cv2.bitwise_and(cv_image, cv_image, mask = blob)
 
-        cv2.imshow("Original and Blobbed", np.hstack([cv_image, blob_img]))
+        # cv2.imshow("Original and Blobbed", np.hstack([cv_image, blob_img]))
+        # cv2.waitKey(3)
+
+        contours, hierarchy = cv2.findContours(blob, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+        # finding contour with maximum area and store it as best_cnt
+        max_area = 0
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
+            if area > max_area:
+                max_area = area
+                best_cnt = cnt
+
+        # finding centroids of best_cnt and draw a circle there
+        M = cv2.moments(best_cnt)
+        cx,cy = int(M['m10']/M['m00']), int(M['m01']/M['m00'])
+        cv2.circle(blob_img,(cx,cy),5,255,-1)
+
+        print cx,cy
+
+        # Show it, if key pressed is 'Esc', exit the loop
+        cv2.imshow('Original', np.hstack([cv_image, blob_img]))
         cv2.waitKey(3)
+
+        if cx < 207: # turn right
+            msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.1))
+            self.pub.publish(msg)        
+        elif cx > 414: # turn left
+            msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,-0.1))
+            self.pub.publish(msg)        
+        else: # go straight
+            msg = Twist(Vector3(0.1,0.0,0.0),Vector3(0.0,0.0,0.0))
+            self.pub.publish(msg)
+
 
     def run(self):
 
