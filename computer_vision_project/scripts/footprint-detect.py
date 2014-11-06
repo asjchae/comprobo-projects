@@ -39,6 +39,9 @@ class FootprintFinder():
         except CvBridgeError, e:
             print e
 
+
+        # cv2.imshow('One', self.cv_image)
+
         # Guessing at our pink feet
         # lower = np.array([150,0,180], "uint8")
         # upper =np.array([204,81,255], "uint8")
@@ -54,6 +57,8 @@ class FootprintFinder():
         blobR = cv2.inRange(self.cv_image, lowerR, upperR)
         blob_img_R = cv2.bitwise_and(self.cv_image, self.cv_image, mask = blobR)
 
+        # cv2.imshow('Two', self.cv_image)
+
         # blobB = cv2.inRange(cv_image, lowerB, upperB)
         # blob_img_B = cv2.bitwise_and(cv_image, cv_image, mask = blobB)
 
@@ -63,16 +68,19 @@ class FootprintFinder():
         contoursR, hierarchyR = cv2.findContours(blobR, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         # contoursB, hierarchyB = cv2.findContours(blobB, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         
+
+        # cv2.imshow('Three', self.cv_image)
+
         # finding contour with maximum area and store it as best_cnt
         max_area = 0
         best_cnt = None
 
         for cntR in contoursR:
             areaR = cv2.contourArea(cntR)
+
             if areaR > max_area:
                 max_area = areaR
                 best_cnt = cntR
-                print best_cnt
                 blob_img = blob_img_R
 
         # for cntB in contoursB:
@@ -82,29 +90,30 @@ class FootprintFinder():
         #         best_cnt = cntB
         #         blob_img = blob_img_B
 
-            if best_cnt is None:
-                msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.0))
+        if best_cnt is None:
+            msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.0))
+            self.pub.publish(msg)
+        else:
+            # finding centroids of best_cnt and draw a circle there
+            M = cv2.moments(best_cnt)
+            cx,cy = int(M['m10']/M['m00']), int(M['m01']/M['m00'])
+            cv2.circle(blob_img,(cx,cy),5,255,-1)
+
+            # cv2.imshow('Five', self.cv_image)
+            # Show it, if key pressed is 'Esc', exit the loop
+            cv2.imshow('Original', np.hstack([self.cv_image, blob_img]))
+#            cv2.waitKey(3)
+
+            if cx < 207: # turn right
+                msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.1))
+                self.pub.publish(msg)        
+            elif cx > 414: # turn left
+                msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,-0.1))
+                self.pub.publish(msg)        
+            else: # go straight
+                msg = Twist(Vector3(0.3,0.0,0.0),Vector3(0.0,0.0,0.0))
                 self.pub.publish(msg)
-            else:
 
-                # finding centroids of best_cnt and draw a circle there
-                M = cv2.moments(best_cnt)
-                cx,cy = int(M['m10']/M['m00']), int(M['m01']/M['m00'])
-                cv2.circle(blob_img,(cx,cy),5,255,-1)
-
-                # Show it, if key pressed is 'Esc', exit the loop
-                cv2.imshow('Original', np.hstack([self.cv_image, blob_img]))
-    #            cv2.waitKey(3)
-
-                if cx < 207: # turn right
-                    msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.1))
-                    self.pub.publish(msg)        
-                elif cx > 414: # turn left
-                    msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,-0.1))
-                    self.pub.publish(msg)        
-                else: # go straight
-                    msg = Twist(Vector3(0.2,0.0,0.0),Vector3(0.0,0.0,0.0))
-                    self.pub.publish(msg)
 
     def run(self):
 
