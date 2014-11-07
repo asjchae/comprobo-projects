@@ -1,0 +1,32 @@
+Ari Chae and Sharon Grimshaw
+Project 3: Melvin the Monster Tracker
+Color recognition using the NEATO camera
+
+What was the goal of your project?
+We wanted to learn more about object detection by color using the camera on the NEATO and the OpenCV library. The goal was to program the NEATO to find red monsters with the camera and run them over. We wanted to be able to have the NEATO find monster after monster to follow a predefined path. As a stretch goal, we wanted to be able to detect a second color (blue) and use it to indicate a different type of movement (stopping).
+
+How did you solve the problem?
+Before we were able to use OpenCV, we had to use cv_bridge to convert the images from ROS images to CV images. Once we had the image from the NEATO’s camera, there were a few steps in order to allow the NEATO to identify monsters and choose the type of movement based on color (run over red monsters and stop in front of blue monsters).
+First, we taught it to recognize different colors by giving it BGR ranges for red and blue. We used the inRange function to find everything in the image that was within the given BGR ranges. The filtered image then showed just the parts of the image that were within those BGR ranges and blacked everything else out. Once we found the colored parts of the image that showed us where the monsters were, we used the findContours function to find the largest blob. We wanted to find the blob with the maximum area because that would be the monster closest to the NEATO.
+In order to make the NEATO move, we had to decide where the monster was in relation to the NEATO. To accomplish this, we found a circle around the identified blob and drew a dot at the centroid. If the dot was to the right of the NEATO, we had the NEATO turn right. If the dot was to the left of the NEATO, we had the NEATO turn left. If the dot was in the middle of the image from the camera, the NEATO moved forward.
+For our stretch goal, we had a variable that was set to True when the image detected red and False when the image detected blue. If the NEATO was approaching a blue blob, we had it use its lidar to stop when it was close to the blob since blue indicated the end of the trail of monsters. Because the lidar was having a hard time detecting the short piece of paper, we ended up using the recycling bin as our final endpoint.
+
+Describe a design decision you had to make when working on your project and what you ultimately did (and why)?
+One design decision we made was how to detect whether the NEATO was approaching a red monster or a blue monster. Because our code is structured in a way that the image processor only cares about finding the largest blob, regardless of color, it was hard to retroactively determine the color of the largest blob after it had been found. In order to fix this problem, we initialized a variable in the Monster Tracker class that was set to True when the biggest blob was red and False when the biggest blob was blue. Using this variable, we ran different functions depending on the monster color in order to have the NEATO follow different movement behaviors.
+Another design decision was how to determine how far the NEATO was from the blue monster (so that it would stop when it got close to the blue monster). Initially we thought we could do this by seeing how large the monster was since the blob would grow larger as the NEATO approached it. This led to a fairly finicky stop since the blob would have a different radius depending on the angle that the NEATO was approaching it from. Instead, we chose to use the lidar because it gave us a more accurate reading.
+
+How did you structure your code?
+We created a class called MonsterTracker to hold all of our code. We had one Publisher for Twist messages so that we could move the NEATO and two Subscribers for receiving images and laser scans from the NEATO. We chose to process the red and blue monsters in the same way by searching for blobs simultaneously. We then took the largest blob out of all of them to determine which one the NEATO would approach first. This was all done in the collect_image function. We did separate out the function (blueblob) for the case when the NEATO was approaching a blue monster because we had to receive data from the lidar. The only thing our run function did was check whether the NEATO was running and moderate the speed of sending/receiving messages.
+
+What if any challenges did you face along the way?
+Initially, we thought our biggest challenge was processing the raw data from the camera fast enough to react and turn the NEATO to run over the monsters. We noticed that there was significant lag in the camera when we were running our image processing on it. However, we discovered that the problem was actually because the NEATO’s camera was having a hard time picking up the colors of the monsters. We had structured our code to only have the NEATO react when it saw a colored monster. Since the camera often wasn’t detecting any colored monsters, the code was not running and therefore the images themselves were not updating. We fixed this problem by adding an if statement to handle the case where the NEATO did not see a monster. We also adjusted the BGR ranges to allow for better color detection.
+ 
+What would you do to improve your project if you had more time?
+Using edge detection would be a good way to improve this project. If we taught the NEATO to recognize shapes, it would only run over monster-shaped objects and ignore all other objects that were the same color as the monsters. While we did not run into this issue often, every once in a while the camera would see something red or blue somewhere else in the room and get distracted from the monsters.
+It would also be interesting to see what other behaviors we could teach the NEATO to do (besides stopping) based on different colors of monsters.
+ 
+Did you learn any interesting lessons for future robotic programming projects?
+We learned that sometimes things go wrong that are out of your control. In this case, we had a lot of issues with the wireless and with the lighting in certain areas of the AC. We learned to go back to the same area the code worked the first time to get rid of the environment variability.
+We also learned that things like OpenCV are nice because they are well-documented on the internet. We would especially like to thank the kind man who was bored enough on the train to provide us with a great tutorial.
+http://www.pyimagesearch.com/2014/08/04/opencv-python-color-detection/
+
