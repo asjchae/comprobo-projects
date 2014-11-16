@@ -116,7 +116,7 @@ class MonsterTracker():
 
         ff = [] # front front
         laserscan = []
-
+        
         # averaging the laser scan points in front of the NEATO
         for i in range(30):
             if msg.ranges[329+i] > 0:
@@ -152,18 +152,12 @@ class MonsterTracker():
                     msg = Twist(Vector3(0.3,0.0,0.0),Vector3(0.0,0.0,0.0))
                     self.pub.publish(msg)
 
-
     def run(self):
 
         r = rospy.Rate(10) # 10hz
         while not rospy.is_shutdown():
-            # msg = Twist(Vector3(vel,0.0,0.0),Vector3(0.0,0.0,turning))
-            # pub.publish(msg)
             cv2.waitKey(3)
             r.sleep()
-
-# Sanity check: rosrun  image_view image_view image:=/camera/image_raw
-
 
 if __name__ == '__main__':
     try:
