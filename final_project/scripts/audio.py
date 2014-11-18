@@ -7,7 +7,7 @@ def mainfunction():
 	r = sr.Recognizer()
 	with sr.Microphone() as source:
 		audio = r.listen(source)
-
+	print "meow"
 	user = r.recognize(audio)
 	print(user)
 
