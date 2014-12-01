@@ -55,14 +55,15 @@ class VoiceCommands():
             laserscan.append(float(0))
 
         # distance between NEATO and obstacle
-        distance = sum(laserscan)/float(len(laserscan))
-        print distance
+        if sum(laserscan)/float(len(laserscan)) > 0:
+            distance = sum(laserscan)/float(len(laserscan))
+            print distance
         
-        # stop if the NEATO is within half a meter of obstacle
-        if (distance < .5) and (distance > 0):
-            self.voicestopper = True
-            msg = Twist(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, 0.0))
-            self.pub.publish(msg)
+            # stop if the NEATO is within half a meter of obstacle
+            if (distance < .5) and (distance > 0):
+                self.voicestopper = True
+                msg = Twist(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, 0.0))
+                self.pub.publish(msg)
 
     def run(self):
         while self.voicestopper == False:

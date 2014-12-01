@@ -104,38 +104,41 @@ class Nellie():
 					self.pub.publish(msg)
 
 	def laser(self, msg):
+		
 		valid_ranges = []
+		laserscan = []
 
 		#Checks to see if what's in front is valid
 		for i in range(60):
-			if msg.ranges[i+300]>0.01 and msg.ranges[i+300]<8:
+			if msg.ranges[i+300] > 0:
 				valid_ranges.append(msg.ranges[i+300])
 		for i in range(60):
-			if msg.ranges[i]>0.01 and msg.ranges[i]<8:
+			if msg.ranges[i] > 0:
 				valid_ranges.append(msg.ranges[i])
 		
 		#Checks if there are obstacles in front
-		if len(valid_ranges)>0:
-			for i in valid_ranges:
-				if i<1:
-					print "Obstacle!"
-					self.turn=-.5
-					self.vel=0
-					self.obstacle=True
-					msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
-					self.pub.publish(msg)
-				else: #Stop and check for color/voice command
-					print "No obstacle"
-					self.turn=0
-					self.vel=.2
-					self.obstacle=False
-					msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
-					self.pub.publish(msg)
+		if len(valid_ranges) > 0:
+			laserscan.append(sum(valid_ranges)/float(len(valid_ranges)))
 		else:
-			"I see nothing"
-			self.vel=0
-			self.turn=0
-			self.obstacle=False
+			laserscan.append(float(0))
+
+		if sum(laserscan)/float(len(laserscan)) > 0:
+			distance = sum(laserscan)/float(len(laserscan))
+
+			if (distance < .75) and (distance > 0):
+				print "Obstacle!"
+				self.turn=-.75
+				self.vel=0
+				self.obstacle=True
+				msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
+				self.pub.publish(msg)
+			else:
+				print "No obstacle"
+				self.turn=0
+				self.vel=.15
+				self.obstacle=False
+				msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
+				self.pub.publish(msg)
 
 	def run(self):
 		r = rospy.Rate(10) # 10hz
