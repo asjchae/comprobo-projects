@@ -29,18 +29,45 @@ class VoiceCommands():
         rospy.init_node('voicecommands', anonymous = True)
         self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
         # self.sub = rospy.Subscriber('/camera/image_raw', Image, self.collect_image)
-        # self.sub = rospy.Subscriber('scan', LaserScan, self.blueblob)
+        self.sub = rospy.Subscriber('scan', LaserScan, self.crashavoider)
 
         self.audio = String
+        self.voicestopper = False
 
     def commands(audio):
         print audio
 
+    def crashavoider(self, msg):
+        ff = [] # front front
+        laserscan = []
+        
+        # averaging the laser scan points in front of the NEATO
+        for i in range(30):
+            if msg.ranges[330+i] > 0:
+                ff.append(msg.ranges[329+i])
+            if msg.ranges[30-i] > 0:
+                ff.append(msg.ranges[30-i])
+        if msg.ranges[0] > 0:
+            ff.append(msg.ranges[0])
+        if len(ff) > 0:
+            laserscan.append(sum(ff)/float(len(ff)))
+        else:
+            laserscan.append(float(0))
+
+        # distance between NEATO and obstacle
+        distance = sum(laserscan)/float(len(laserscan))
+        print distance
+        
+        # stop if the NEATO is within half a meter of obstacle
+        if (distance < .5) and (distance > 0):
+            self.voicestopper = True
+            msg = Twist(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, 0.0))
+            self.pub.publish(msg)
+
     def run(self):
-        while 1:
+        while self.voicestopper == False:
             self.audio = mainfunction(self)
-            if self.audio == "quit":
-                quit()
+
 
         r = rospy.Rate(10) # 10hz
         while not rospy.is_shutdown():
@@ -52,22 +79,22 @@ def mainfunction(self):
     with sr.Microphone() as source:
         audio = r.listen(source)
         command = r.recognize(audio)
-    
+
     if command == "go forward":
         # Code to go straight
-        msg = Twist(Vector3(0.5,0.0,0.0),Vector3(0.0,0.0,0.0))
+        msg = Twist(Vector3(0.2,0.0,0.0),Vector3(0.0,0.0,0.0))
         self.pub.publish(msg)
     elif command == "go back":
         # Code to go backwards
-        msg = Twist(Vector3(-0.5,0.0,0.0),Vector3(0.0,0.0,0.0))
+        msg = Twist(Vector3(-0.2,0.0,0.0),Vector3(0.0,0.0,0.0))
         self.pub.publish(msg)
     elif command == "turn left":
         # Code to turn left
-        msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.5))
+        msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.2))
         self.pub.publish(msg)
     elif command == "turn right":
         # Code to turn right
-        msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,-0.5))
+        msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,-0.2))
         self.pub.publish(msg)
     elif command == "stop":
         # Code to stop
@@ -75,7 +102,7 @@ def mainfunction(self):
         self.pub.publish(msg)
     elif command == "quit":
         # Quit code
-        return "quit"
+        quit()
     
 
 if __name__ == '__main__':
