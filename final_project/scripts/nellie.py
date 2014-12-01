@@ -8,6 +8,7 @@ import argparse
 import cv2
 import cv
 import time
+import math
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
@@ -111,37 +112,50 @@ class Nellie():
 		laserscan = []
 
 		#Checks to see if what's in front is valid
-		for i in range(60):
-			if msg.ranges[i+300] > 0:
-				valid_ranges.append(msg.ranges[i+300])
-		for i in range(60):
-			if msg.ranges[i] > 0:
-				valid_ranges.append(msg.ranges[i])
+		for i in range(45):
+			if msg.ranges[i+315] > 0:
+				valid_ranges.append(msg.ranges[i+315])
+			if msg.ranges[45-i] > 0:
+				valid_ranges.append(msg.ranges[45-i])
 		
-		#Checks if there are obstacles in front
 		if len(valid_ranges) > 0:
-			laserscan.append(sum(valid_ranges)/float(len(valid_ranges)))
-
+			length=len(valid_ranges)
+			right=sum(valid_ranges[0:length/5])/float(length/5)
+			frontright=sum(valid_ranges[length/5:length/5*2])/float(length/5)
+			front=sum(valid_ranges[length/5*2:length/5*3])/float(length/5)
+			frontleft=sum(valid_ranges[length/5*3:length/5*4])/float(length/5)
+			left=sum(valid_ranges[length/5*4:length])/float(length/5)
+			view=[right,frontright,front,frontleft,left]
 		else:
-			laserscan.append(float(0))
+			print "I'm blind"
 
-		if sum(laserscan)/float(len(laserscan)) > 0:
-			distance = sum(laserscan)/float(len(laserscan))
+		print "right"
+		print right
+		print "frontright"
+		print frontright
+		print "front"
+		print front
+		print "frontleft"
+		print frontleft
+		print "left"
+		print left
+		print " "
 
-			if (distance < .75) and (distance > 0):
-				print "Obstacle!"
-				self.turn=-.75
-				self.vel=0
-				self.obstacle=True
-				msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
-				self.pub.publish(msg)
-			else:
-				print "No obstacle"
-				self.turn=0
-				self.vel=.15
-				self.obstacle=False
-				msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
-				self.pub.publish(msg)
+		if (min(view)<1) and (front > 0):
+			print "Obstacle!"
+			self.turn=-.5
+			self.vel=0
+			self.obstacle=True
+			msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
+			self.pub.publish(msg)
+			time.sleep(.2)
+		else:
+			#print "No obstacle"
+			self.turn=0
+			self.vel=.15
+			self.obstacle=False
+			msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
+			self.pub.publish(msg)
 
 	def run(self):
 		r = rospy.Rate(10) # 10hz
