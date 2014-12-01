@@ -37,7 +37,9 @@ class Nellie():
 
 	def audio(self, msg):
 		#ari's voice code
-		pass
+		if self.obstacle is False and self.seeColor is False:
+			pass
+		
 
 	def camera(self, msg):
 		#color recognition code
@@ -73,7 +75,7 @@ class Nellie():
 			max_area = 0
 			best_cnt = None
 
-			# is the biggest blob red?
+			# is red closest?
 			for cntR in contoursR:
 				areaR = cv2.contourArea(cntR)
 
@@ -89,7 +91,7 @@ class Nellie():
 					msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
 					self.pub.publish(msg)
 
-			# or is the biggest blob blue?
+			# or is blue closest?
 			for cntB in contoursB:
 				areaB = cv2.contourArea(cntB)
 				if areaB > max_area:
