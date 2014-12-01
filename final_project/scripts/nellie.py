@@ -20,7 +20,7 @@ class Nellie():
 	def __init__(self):
 		rospy.init_node('nellie', anonymous = True)
 		self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
-		self.sub = rospy.Subscriber('/camera/image_raw', Image, self.camera)
+		#self.sub = rospy.Subscriber('/camera/image_raw', Image, self.camera)
 		self.sub = rospy.Subscriber('scan', LaserScan, self.laser)
 		#self.sub = rospy.Subscriber('voice', Voice, self.audio)
 
@@ -39,7 +39,7 @@ class Nellie():
 		#ari's voice code
 		if self.obstacle is False and self.seeColor is False:
 			pass
-		
+
 
 	def camera(self, msg):
 		#color recognition code
@@ -85,7 +85,7 @@ class Nellie():
 					signal_img = redStopImage
 					print "red"
 					self.turn=0
-					self.vel=.2
+					self.vel=.1
 					self.seeColor=True
 					#time.sleep(5)
 					msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
@@ -121,6 +121,7 @@ class Nellie():
 		#Checks if there are obstacles in front
 		if len(valid_ranges) > 0:
 			laserscan.append(sum(valid_ranges)/float(len(valid_ranges)))
+
 		else:
 			laserscan.append(float(0))
 
