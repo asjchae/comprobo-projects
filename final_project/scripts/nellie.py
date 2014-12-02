@@ -33,6 +33,13 @@ class Nellie():
 		self.vel=0
 		self.obstacle=False
 		self.seeColor=False
+
+		self.right = 5
+		self.frontright = 5
+		self.front = 5
+		self.frontleft = 5
+		self.left = 5
+		self.view = []
 		
 		print "I made Nellie"
 
@@ -120,39 +127,44 @@ class Nellie():
 		
 		if len(valid_ranges) > 0:
 			length=len(valid_ranges)
-			right=sum(valid_ranges[0:length/5])/float(length/5)
-			frontright=sum(valid_ranges[length/5:length/5*2])/float(length/5)
-			front=sum(valid_ranges[length/5*2:length/5*3])/float(length/5)
-			frontleft=sum(valid_ranges[length/5*3:length/5*4])/float(length/5)
-			left=sum(valid_ranges[length/5*4:length])/float(length/5)
-			view=[right,frontright,front,frontleft,left]
+			self.left=sum(valid_ranges[0:length/5])/(float(length)/5)
+			self.frontleft=sum(valid_ranges[length/5:length/5*2])/(float(length)/5)
+			self.front=sum(valid_ranges[length/5*2:length/5*3])/(float(length)/5)
+			self.frontright=sum(valid_ranges[length/5*3:length/5*4])/(float(length)/5)
+			self.right=sum(valid_ranges[length/5*4:length])/(float(length)/5)
+			self.view=[self.left,self.frontleft,self.front,self.frontright,self.right]
 		else:
 			print "I'm blind"
 
 		print "right"
-		print right
+		print self.right
 		print "frontright"
-		print frontright
+		print self.frontright
 		print "front"
-		print front
+		print self.front
 		print "frontleft"
-		print frontleft
+		print self.frontleft
 		print "left"
-		print left
+		print self.left
 		print " "
 
-		if (min(view)<1) and (front > 0):
+		if (min(self.view) < .7) and (self.front > 0):
 			print "Obstacle!"
-			self.turn=-.5
+			print "MIN"
+			print self.view.index(min(self.view))
+			if self.view.index(min(self.view)) > 2:
+				self.turn=.5
+			else:
+				self.turn=.5
 			self.vel=0
 			self.obstacle=True
 			msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
 			self.pub.publish(msg)
-			time.sleep(.2)
+			time.sleep(.1)
 		else:
 			#print "No obstacle"
 			self.turn=0
-			self.vel=.15
+			self.vel=.1
 			self.obstacle=False
 			msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
 			self.pub.publish(msg)
