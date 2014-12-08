@@ -21,7 +21,7 @@ class Nellie():
 	def __init__(self):
 		rospy.init_node('nellie', anonymous = True)
 		self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
-		#self.sub = rospy.Subscriber('/camera/image_raw', Image, self.camera)
+		self.sub = rospy.Subscriber('/camera/image_raw', Image, self.camera)
 		self.sub = rospy.Subscriber('scan', LaserScan, self.laser)
 		#self.sub = rospy.Subscriber('voice', Voice, self.audio)
 
@@ -33,6 +33,7 @@ class Nellie():
 		self.vel=0
 		self.obstacle=False
 		self.seeColor=False
+		self.redAction=False
 
 		self.right = 5
 		self.frontright = 5
@@ -51,21 +52,23 @@ class Nellie():
 
 	def camera(self, msg):
 		#color recognition code
-		print "hi"
 		if self.obstacle is False:
-			print "looking for color"
 			try:
 				self.cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
 			except CvBridgeError, e:
 				print e
 
 			# using a BGR range to detect red
-			lowerR = np.array([2,0,85], "uint8")
-			upperR = np.array([65,71,215], "uint8")        
+			# lowerR = np.array([2,0,85], "uint8")
+			# upperR = np.array([65,71,215], "uint8")
+			lowerR = np.array([0,0,150], "uint8")
+			upperR = np.array([50,50,255], "uint8")       
 
 			# using a BGR range to detect blue
-			lowerB = np.array([60, 16, 0], "uint8")
-			upperB = np.array([235, 103, 65], "uint8")
+			# lowerB = np.array([60, 16, 0], "uint8")
+			# upperB = np.array([235, 103, 65], "uint8")
+			lowerB = np.array([60, 0, 0], "uint8")
+			upperB = np.array([255, 50, 50], "uint8")
 
 			# using inRange to detect red stop signal
 			redStop = cv2.inRange(self.cv_image, lowerR, upperR)
@@ -87,41 +90,53 @@ class Nellie():
 			for cntR in contoursR:
 				areaR = cv2.contourArea(cntR)
 
-				if areaR > max_area:
+				if areaR > max_area and areaR > 1000:
 					max_area = areaR
 					best_cnt = cntR
 					signal_img = redStopImage
 					print "red"
 					self.turn=0
-					self.vel=.1
+					self.vel=0.1
 					self.seeColor=True
-					#time.sleep(5)
+					if self.redAction is False:
+						time.sleep(2)
+						self.redAction=True
 					msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
 					self.pub.publish(msg)
 
-			# or is blue closest?
+			#or is blue closest?
 			for cntB in contoursB:
 				areaB = cv2.contourArea(cntB)
-				if areaB > max_area:
+				if areaB > max_area and areaB > 1000:
 					max_area = areaB
 					best_cnt = cntB
 					signal_img = blueTurnImage
 					print "blue"
-					self.turn=.5
+					self.turn=0.5
 					self.vel=0
 					self.seeColor=True
+					self.redAction=False
 					msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
 					self.pub.publish(msg)
+			if best_cnt is None: #don't move
+				msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.0))
+				self.pub.publish(msg)
+			# if there is a blob...
+			else:
+				# finding centroids of best_cnt and draw a circle there
+				M = cv2.moments(best_cnt)
+				self.cx,cy = int(M['m10']/M['m00']), int(M['m01']/M['m00'])
+				cv2.circle(signal_img,(self.cx,cy),5,255,-1)
+				cv2.imshow('Original', np.hstack([self.cv_image, signal_img]))
 
 	def laser(self, msg):
-		
 		valid_ranges = []
 		laserscan = []
 
 		#Checks to see if what's in front is valid
 		for i in range(45):
-			if msg.ranges[i+315] > 0:
-				valid_ranges.append(msg.ranges[i+315])
+			if msg.ranges[i+314] > 0:
+				valid_ranges.append(msg.ranges[i+314])
 			if msg.ranges[45-i] > 0:
 				valid_ranges.append(msg.ranges[45-i])
 		
@@ -136,35 +151,35 @@ class Nellie():
 		else:
 			print "I'm blind"
 
-		print "right"
-		print self.right
-		print "frontright"
-		print self.frontright
-		print "front"
-		print self.front
-		print "frontleft"
-		print self.frontleft
-		print "left"
-		print self.left
-		print " "
+		# print "right"
+		# print self.right
+		# print "frontright"
+		# print self.frontright
+		# print "front"
+		# print self.front
+		# print "frontleft"
+		# print self.frontleft
+		# print "left"
+		# print self.left
+		# print " "
 
-		if (min(self.view) < .7) and (self.front > 0):
+		if (min(self.view) < .1) and (self.front > 0):
 			print "Obstacle!"
-			print "MIN"
-			print self.view.index(min(self.view))
+			# print "MIN"
+			# print self.view.index(min(self.view))
 			if self.view.index(min(self.view)) > 2:
-				self.turn=.5
+				self.turn=0
 			else:
-				self.turn=.5
+				self.turn=0
 			self.vel=0
 			self.obstacle=True
 			msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
 			self.pub.publish(msg)
-			time.sleep(.1)
+			#time.sleep(.1)
 		else:
-			#print "No obstacle"
+			print "No obstacle"
 			self.turn=0
-			self.vel=.1
+			self.vel=0
 			self.obstacle=False
 			msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
 			self.pub.publish(msg)
