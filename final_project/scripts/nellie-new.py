@@ -13,7 +13,6 @@ from geometry_msgs.msg import Vector3
 from sensor_msgs.msg import LaserScan
 import pyaudio
 import speech_recognition as sr
-from time import gmtime, strftime
 import datetime
 
 class Nellie():
@@ -35,7 +34,10 @@ class Nellie():
 
     def camera(self, msg):
 
-        if self.obstacle is False and self.seeColor is False:
+        if self.seeColor is True:
+            pass
+
+        elif self.obstacle is False and self.seeColor is False:
             try:
                 self.cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
             except CvBridgeError, e:
@@ -65,17 +67,16 @@ class Nellie():
                     signal_img = redStopImage
                     print "red"
                     self.seeColor = True
+                    break
             if self.seeColor == True:
-                print "here"
                 # self.seeColor = False
                 # self.seeColor = True
                 # Make it calculate two seconds out.
-                currentTime = int(datetime.datetime.today().timetuple()[5])
-                if int(datetime.datetime.today().timetuple()[5]) == currentTime + 2:
-                    print "here2"
-                    # msg=Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.5))
-                    # self.pub.publish(msg)
-                    # self.seeColor = False
+                time.sleep(2)
+                msg=Twist(Vector3(0.1,0.0,0.0),Vector3(0.0,0.0,0.0))
+                self.pub.publish(msg)
+                time.sleep(5)
+                self.seeColor = False
 
     # Stops if it sees an obstacle.
     def laser(self, msg):
@@ -113,6 +114,7 @@ class Nellie():
     def run(self):
         # while self.seeColor == False and self.obstacle == False:
         #     self.audio = audio(self)
+
         r = rospy.Rate(10) # 10hz
 
         while not rospy.is_shutdown():
