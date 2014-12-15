@@ -30,6 +30,9 @@ class Nellie():
         self.obstacle=False
         self.seeColor=False
 
+        self.vel = 0.0
+        self.turn = 0.0
+
     def camera(self, msg):
 
         if self.obstacle is False and self.seeColor is False:
@@ -96,20 +99,26 @@ class Nellie():
         if sum(laserscan)/float(len(laserscan)) > 0:
             distance = sum(laserscan)/float(len(laserscan))
             print distance
+            print self.obstacle
+            print " "
         
             # stop if the NEATO is within half a meter of obstacle
-            if (distance < .3) and (distance > 0):
+            if (distance < .7) and (distance > 0):
                 self.obstacle = True
-                msg = Twist(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, 0.0))
+                msg = Twist(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, 0.2))
                 self.pub.publish(msg)
+            else:
+                self.obstacle = False
 
     def run(self):
-        while self.seeColor == False and self.obstacle == False:
-            self.audio = audio(self)
+        # while self.seeColor == False and self.obstacle == False:
+        #     self.audio = audio(self)
         r = rospy.Rate(10) # 10hz
 
         while not rospy.is_shutdown():
-            cv2.waitKey(3)
+            if self.seeColor == False and self.obstacle == False:
+                self.audio = audio(self)
+            #cv2.waitKey(3)
             r.sleep()
 
 def audio(self):
@@ -119,7 +128,7 @@ def audio(self):
         audio = r.listen(source)
         command = r.recognize(audio)
 
-    if command == "go forward":
+    if command == "go straight":
         # Code to go straight
         msg = Twist(Vector3(0.2,0.0,0.0),Vector3(0.0,0.0,0.0))
         self.pub.publish(msg)
