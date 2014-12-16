@@ -72,6 +72,7 @@ class Nellie():
                 time.sleep(2)
                 msg=Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.4))
                 self.pub.publish(msg)
+
                 time.sleep(5)
                 self.color = False
                 msg=Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.0))
@@ -103,6 +104,7 @@ class Nellie():
         #     print self.obstacle
         #     print " "
         
+<<<<<<< HEAD
         #     # stop if the NEATO is within half a meter of obstacle
         #     if (distance < .7) and (distance > 0):
         #         self.obstacle = True
@@ -110,6 +112,15 @@ class Nellie():
         #         self.pub.publish(msg)
         #     else:
         #         self.obstacle = False
+=======
+            # stop if the NEATO is within half a meter of obstacle
+            if (distance < .7) and (distance > 0):
+                self.obstacle = True
+                self.vel = 0.0
+                self.turn - 0.2
+            else:
+                self.obstacle = False
+>>>>>>> 766f3fcd4dde81ecf73005cc349a638609c8a1fe
 
     def run(self):
         # while self.color == False and self.obstacle == False:
@@ -121,6 +132,8 @@ class Nellie():
             if self.color == False and self.obstacle == False:
                 self.audio = audio(self)
             #cv2.waitKey(3)
+            msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
+            self.pub.publish(msg)
             r.sleep()
 
 def audio(self):
@@ -132,24 +145,24 @@ def audio(self):
     print command
     if command == "go straight":
         # Code to go straight
-        msg = Twist(Vector3(0.2,0.0,0.0),Vector3(0.0,0.0,0.0))
-        self.pub.publish(msg)
+        self.vel = 0.2
+        self.turn = 0.0
     elif command == "go back":
         # Code to go backwards
-        msg = Twist(Vector3(-0.2,0.0,0.0),Vector3(0.0,0.0,0.0))
-        self.pub.publish(msg)
+        self.vel = -0.2
+        self.turn = 0.0
     elif command == "turn left":
         # Code to turn left
-        msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.2))
-        self.pub.publish(msg)
+        self.vel = 0.0
+        self.turn = 0.2
     elif command == "turn right":
         # Code to turn right
-        msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,-0.2))
-        self.pub.publish(msg)
+        self.vel = 0.0
+        self.turn = -0.2
     elif command == "stop":
         # Code to stop
-        msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.0))
-        self.pub.publish(msg)
+        self.vel = 0.0
+        self.turn = 0.0
     elif command == "quit":
         # Quit code
         quit()
