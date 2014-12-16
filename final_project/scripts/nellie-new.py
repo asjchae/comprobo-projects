@@ -73,8 +73,8 @@ class Nellie():
                 # self.seeColor = True
                 # Make it calculate two seconds out.
                 time.sleep(2)
-                msg=Twist(Vector3(0.1,0.0,0.0),Vector3(0.0,0.0,0.0))
-                self.pub.publish(msg)
+                self.vel = 0.1
+                self.turn = 0.0
                 time.sleep(5)
                 self.seeColor = False
 
@@ -106,8 +106,8 @@ class Nellie():
             # stop if the NEATO is within half a meter of obstacle
             if (distance < .7) and (distance > 0):
                 self.obstacle = True
-                msg = Twist(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, 0.2))
-                self.pub.publish(msg)
+                self.vel = 0.0
+                self.turn - 0.2
             else:
                 self.obstacle = False
 
@@ -121,6 +121,8 @@ class Nellie():
             if self.seeColor == False and self.obstacle == False:
                 self.audio = audio(self)
             #cv2.waitKey(3)
+            msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
+            self.pub.publish(msg)
             r.sleep()
 
 def audio(self):
@@ -132,24 +134,24 @@ def audio(self):
 
     if command == "go straight":
         # Code to go straight
-        msg = Twist(Vector3(0.2,0.0,0.0),Vector3(0.0,0.0,0.0))
-        self.pub.publish(msg)
+        self.vel = 0.2
+        self.turn = 0.0
     elif command == "go back":
         # Code to go backwards
-        msg = Twist(Vector3(-0.2,0.0,0.0),Vector3(0.0,0.0,0.0))
-        self.pub.publish(msg)
+        self.vel = -0.2
+        self.turn = 0.0
     elif command == "turn left":
         # Code to turn left
-        msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.2))
-        self.pub.publish(msg)
+        self.vel = 0.0
+        self.turn = 0.2
     elif command == "turn right":
         # Code to turn right
-        msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,-0.2))
-        self.pub.publish(msg)
+        self.vel = 0.0
+        self.turn = -0.2
     elif command == "stop":
         # Code to stop
-        msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.0))
-        self.pub.publish(msg)
+        self.vel = 0.0
+        self.turn = 0.0
     elif command == "quit":
         # Quit code
         quit()
