@@ -189,10 +189,11 @@ class Nellie():
             r.sleep()
 
 def audio(self):
-
+    print "here"
     r = sr.Recognizer()
     with sr.Microphone() as source:
         audio = r.listen(source)
+        print type(audio)
         command = r.recognize(audio)
 
     if command == "go forward":
