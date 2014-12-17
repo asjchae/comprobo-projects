@@ -94,6 +94,8 @@ class Nellie():
 
         fr = [] # front right
         fl = [] # front left
+        distance_l = 0.0
+        distance_r = 0.0
         
         # averaging the laser scan points in front of the NEATO
         for i in range(30):
@@ -110,9 +112,16 @@ class Nellie():
 
         # distance between NEATO and obstacle
         if len(fr)>0 and sum(fr)/float(len(fr))>0:
-        	distance_r = sum(fr)/float(len(fr))
+            distance_r = sum(fr)/float(len(fr))
+            if (distance_r < .7) and (distance_r > 0):
+                self.obstacle = True
+                msg = Twist(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, 0.2))
+                self.pub.publish(msg)
+            if sum(msg.ranges[270:275])/float(5)<0.7:
+                msg = Twist(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, 0.0))
+                self.pub.publish(msg)
         if len(fl)>0 and sum(fl)/float(len(fl))>0:
-        	distance_l = sum(fl)/float(len(fl))
+            distance_l = sum(fl)/float(len(fl))
         # if sum(laserscan)/float(len(laserscan)) > 0:
         #     distance = sum(laserscan)/float(len(laserscan))
 
@@ -120,10 +129,6 @@ class Nellie():
             if (distance_l < .7) and (distance_l > 0):
                 self.obstacle = True
                 msg = Twist(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, -0.2))
-                self.pub.publish(msg)
-            elif (distance_r < .7) and (distance_r > 0):
-                self.obstacle = True
-                msg = Twist(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, 0.2))
                 self.pub.publish(msg)
             else:
                 self.obstacle = False

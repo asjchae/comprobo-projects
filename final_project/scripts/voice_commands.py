@@ -26,10 +26,10 @@ import speech_recognition as sr
 class VoiceCommands():
 
     def __init__(self):
-        rospy.init_node('voicecommands', anonymous = True)
-        self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+        # rospy.init_node('voicecommands', anonymous = True)
+        # self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
         # self.sub = rospy.Subscriber('/camera/image_raw', Image, self.collect_image)
-        self.sub = rospy.Subscriber('scan', LaserScan, self.crashavoider)
+        # self.sub = rospy.Subscriber('scan', LaserScan, self.crashavoider)
 
         self.audio = String
         self.voicestopper = False
@@ -82,25 +82,30 @@ def mainfunction(self):
         command = r.recognize(audio)
 
     if command == "go forward":
+    	print "go forward"
         # Code to go straight
-        msg = Twist(Vector3(0.2,0.0,0.0),Vector3(0.0,0.0,0.0))
-        self.pub.publish(msg)
+        # msg = Twist(Vector3(0.2,0.0,0.0),Vector3(0.0,0.0,0.0))
+        # self.pub.publish(msg)
     elif command == "go back":
+    	print "go back"
         # Code to go backwards
-        msg = Twist(Vector3(-0.2,0.0,0.0),Vector3(0.0,0.0,0.0))
-        self.pub.publish(msg)
+        # msg = Twist(Vector3(-0.2,0.0,0.0),Vector3(0.0,0.0,0.0))
+        # self.pub.publish(msg)
     elif command == "turn left":
+    	print "turn left"
         # Code to turn left
-        msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.2))
-        self.pub.publish(msg)
+        # msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.2))
+        # self.pub.publish(msg)
     elif command == "turn right":
+    	print "turn right"
         # Code to turn right
-        msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,-0.2))
-        self.pub.publish(msg)
+        # msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,-0.2))
+        # self.pub.publish(msg)
     elif command == "stop":
+    	print "stop"
         # Code to stop
-        msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.0))
-        self.pub.publish(msg)
+        # msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.0))
+        # self.pub.publish(msg)
     elif command == "quit":
         # Quit code
         quit()
