@@ -92,28 +92,36 @@ class Nellie():
     # Stops if it sees an obstacle.
     def laser(self, msg):
 
-        ff = [] # front front
-        laserscan = []
+        fr = [] # front right
+        fl = [] # front left
         
         # averaging the laser scan points in front of the NEATO
         for i in range(30):
             if msg.ranges[330+i] > 0:
-                ff.append(msg.ranges[329+i])
+                fl.append(msg.ranges[329+i])
             if msg.ranges[30-i] > 0:
-                ff.append(msg.ranges[30-i])
-        if msg.ranges[0] > 0:
-            ff.append(msg.ranges[0])
-        if len(ff) > 0:
-            laserscan.append(sum(ff)/float(len(ff)))
-        else:
-            laserscan.append(float(0))
+                fr.append(msg.ranges[30-i])
+        # if msg.ranges[0] > 0:
+        #     ff.append(msg.ranges[0])
+        # if len(ff) > 0:
+        #     laserscan.append(sum(ff)/float(len(ff)))
+        # else:
+        #     laserscan.append(float(0))
 
         # distance between NEATO and obstacle
-        if sum(laserscan)/float(len(laserscan)) > 0:
-            distance = sum(laserscan)/float(len(laserscan))
+        if len(fr)>0 and sum(fr)/float(len(fr))>0:
+        	distance_r = sum(fr)/float(len(fr))
+        if len(fl)>0 and sum(fl)/float(len(fl))>0:
+        	distance_l = sum(fl)/float(len(fl))
+        # if sum(laserscan)/float(len(laserscan)) > 0:
+        #     distance = sum(laserscan)/float(len(laserscan))
 
-            # stop if the NEATO is within half a meter of obstacle
-            if (distance < .2) and (distance > 0):
+            # turn away from the obstacle if the NEATO is too close
+            if (distance_l < .7) and (distance_l > 0):
+                self.obstacle = True
+                msg = Twist(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, -0.2))
+                self.pub.publish(msg)
+            elif (distance_r < .7) and (distance_r > 0):
                 self.obstacle = True
                 msg = Twist(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, 0.2))
                 self.pub.publish(msg)
@@ -128,8 +136,7 @@ class Nellie():
 
         while not rospy.is_shutdown():
             if self.color == False and self.obstacle == False:
-                print "Audio should happen"
-                # self.audio = audio(self)
+                self.audio = audio(self)
             else:
                 print str(self.color) + " color"
                 print str(self.obstacle) + " obstacle"
