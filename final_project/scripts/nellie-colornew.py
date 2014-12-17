@@ -170,6 +170,10 @@ def audio(self):
         # Code to stop
         msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.0))
         self.pub.publish(msg)
+    elif command == "bad robot":
+        # Makes the robot stop
+        msg = Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.0))
+        self.pub.publish(msg)
     elif command == "quit":
         # Quit code
         quit()

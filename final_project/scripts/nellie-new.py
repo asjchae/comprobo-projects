@@ -94,12 +94,21 @@ class Nellie():
         distance_l = 0.0
         distance_r = 0.0
         
+        right = []
+        left = []
+
         # averaging the laser scan points in front of the NEATO
         for i in range(30):
             if msg.ranges[330+i] > 0:
                 fr.append(msg.ranges[329+i])
             if msg.ranges[30-i] > 0:
                 fl.append(msg.ranges[30-i])
+
+        for i in range(60):
+            if msg.ranges[60-i] > 0:
+                right.append(msg.ranges[60-i])
+            if msg.ranges[300+i] > 0:
+                left.append(msg.ranges[300+i])
 
         if (len(fr)>0 and sum(fr)/float(len(fr))>0) or (len(fl)>0 and sum(fl)/float(len(fl))>0):
             if len(fr)>0 and sum(fr)/float(len(fr))>0:
@@ -108,16 +117,25 @@ class Nellie():
                 distance_l = sum(fl)/float(len(fl))
 
             if (distance_r < .7) and (distance_r > 0):
-                self.obstacle = True
-                self.vel = 0.0
-                self.turn = 0.2
+                # If it is turning left
+                obstacleTracker = msg.ranges[330+i].append(msg.ranges[30-i])
+                while right != obstacleTracker:                    
+                    self.vel = 0.0
+                    self.turn = 0.2
+                    msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
+                    self.pub.publish(msg)                    
+
             elif (distance_l < .7) and (distance_l > 0):
-                self.obstacle = True
-                self.vel = 0.0
-                self.turn = -0.2
-            elif (distance_l>0.69) and (distance_r>0.69) and (self.obstacle==True):
-                self.vel = 0.0
-                self.turn = 0.0
+                obstacleTracker = msg.ranges[330+i].append(msg.ranges[30-i])
+                while left != obstacleTracker:
+                    self.vel = 0.0
+                    self.turn = -0.2
+                    msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
+                    self.pub.publish(msg)  
+
+            # elif (distance_l>0.69) and (distance_r>0.69) and (self.obstacle==True):
+            #     self.vel = 0.0
+            #     self.turn = 0.0
             else:
                 self.obstacle = False
 
