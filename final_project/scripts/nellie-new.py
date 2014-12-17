@@ -78,42 +78,59 @@ class Nellie():
             if self.color == True:
                 # Stop for two seconds.
                 time.sleep(2)
-                msg=Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.4))
-                self.pub.publish(msg)
+                self.vel = 0.0
+                self.turn = 0.4
                 time.sleep(5)
-                msg=Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.0))
-                self.pub.publish(msg)
+                self.vel = 0.0
+                self.turn = 0.0
                 self.color = False
             else:
                 return
 
     # Stops if it sees an obstacle.
     def laser(self, msg):
-        ff = [] # front front
-        laserscan = []
+        fr = [] # front right
+        fl = [] # front left
+        distance_l = 0.0
+        distance_r = 0.0
         
         # averaging the laser scan points in front of the NEATO
         for i in range(30):
             if msg.ranges[330+i] > 0:
-                ff.append(msg.ranges[329+i])
+                fr.append(msg.ranges[329+i])
             if msg.ranges[30-i] > 0:
-                ff.append(msg.ranges[30-i])
-        if msg.ranges[0] > 0:
-            ff.append(msg.ranges[0])
-        if len(ff) > 0:
-            laserscan.append(sum(ff)/float(len(ff)))
-        else:
-            laserscan.append(float(0))
+                fl.append(msg.ranges[30-i])
+        # if msg.ranges[0] > 0:
+        #     ff.append(msg.ranges[0])
+        # if len(ff) > 0:
+        #     laserscan.append(sum(ff)/float(len(ff)))
+        # else:
+        #     laserscan.append(float(0))
 
         # distance between NEATO and obstacle
-        if sum(laserscan)/float(len(laserscan)) > 0:
-            distance = sum(laserscan)/float(len(laserscan))
-
-            # stop if the NEATO is within half a meter of obstacle
-            if (distance < .2) and (distance > 0):
+        if len(fr)>0 and sum(fr)/float(len(fr))>0:
+            distance_r = sum(fr)/float(len(fr))
+            if (distance_r < .7) and (distance_r > 0):
                 self.obstacle = True
                 self.vel = 0.0
                 self.turn = 0.2
+            # if sum(msg.ranges[270:275])/float(5)<0.3:
+            #     print sum(msg.ranges[270:275])/float(5)
+            #     self.vel = 0.0
+            #     self.turn = 0.0
+        if len(fl)>0 and sum(fl)/float(len(fl))>0:
+            distance_l = sum(fl)/float(len(fl))
+        # if sum(laserscan)/float(len(laserscan)) > 0:
+        #     distance = sum(laserscan)/float(len(laserscan))
+
+            # turn away from the obstacle if the NEATO is too close
+            if (distance_l < .7) and (distance_l > 0):
+                self.obstacle = True
+                self.vel = 0.0
+                self.turn = -0.2
+            elif (distance_l>0.69) and (distance_r>0.69) and (self.obstacle==True):
+                self.vel = 0.0
+                self.turn = 0.0
             else:
                 self.obstacle = False
 
@@ -127,7 +144,7 @@ class Nellie():
             if self.color == False and self.obstacle == False:
                 self.audio = audio(self)
             #cv2.waitKey(3)
-            msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
+            msg=Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,self.turn))
             self.pub.publish(msg)
             r.sleep()
 
