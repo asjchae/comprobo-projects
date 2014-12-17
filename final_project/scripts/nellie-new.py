@@ -29,6 +29,9 @@ class Nellie():
         self.obstacle = False
         self.color = False
 
+        self.vel = 0.0
+        self.turn = 0.0
+
     def camera(self, msg):
 
         if self.color is True:
@@ -43,8 +46,10 @@ class Nellie():
                 print e
 
             # using a BGR range to detect red
-            lowerR = np.array([0,0,150], "uint8")
-            upperR = np.array([50,50,255], "uint8")       
+            # lowerR = np.array([0,0,150], "uint8")
+            # upperR = np.array([50,50,255], "uint8")       
+            lowerR = np.array([2,0,85], "uint8")
+            upperR = np.array([65,71,215], "uint8")
 
             # using inRange to detect red stop signal
             redStop = cv2.inRange(self.cv_image, lowerR, upperR)
@@ -66,61 +71,51 @@ class Nellie():
                     signal_img = redStopImage
                     print "red"
                     self.color = True
+                    # Make it not take the next frame because lag
+                    self.next_frame_to_process = msg.header.seq + 15*5
                     break
+
             if self.color == True:
                 # Stop for two seconds.
                 time.sleep(2)
                 msg=Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.4))
                 self.pub.publish(msg)
-
                 time.sleep(5)
-                self.color = False
                 msg=Twist(Vector3(0.0,0.0,0.0),Vector3(0.0,0.0,0.0))
                 self.pub.publish(msg)
+                self.color = False
+            else:
+                return
 
     # Stops if it sees an obstacle.
     def laser(self, msg):
-        pass
-        # ff = [] # front front
-        # laserscan = []
+        ff = [] # front front
+        laserscan = []
         
-        # # averaging the laser scan points in front of the NEATO
-        # for i in range(30):
-        #     if msg.ranges[330+i] > 0:
-        #         ff.append(msg.ranges[329+i])
-        #     if msg.ranges[30-i] > 0:
-        #         ff.append(msg.ranges[30-i])
-        # if msg.ranges[0] > 0:
-        #     ff.append(msg.ranges[0])
-        # if len(ff) > 0:
-        #     laserscan.append(sum(ff)/float(len(ff)))
-        # else:
-        #     laserscan.append(float(0))
+        # averaging the laser scan points in front of the NEATO
+        for i in range(30):
+            if msg.ranges[330+i] > 0:
+                ff.append(msg.ranges[329+i])
+            if msg.ranges[30-i] > 0:
+                ff.append(msg.ranges[30-i])
+        if msg.ranges[0] > 0:
+            ff.append(msg.ranges[0])
+        if len(ff) > 0:
+            laserscan.append(sum(ff)/float(len(ff)))
+        else:
+            laserscan.append(float(0))
 
-        # # distance between NEATO and obstacle
-        # if sum(laserscan)/float(len(laserscan)) > 0:
-        #     distance = sum(laserscan)/float(len(laserscan))
-        #     print distance
-        #     print self.obstacle
-        #     print " "
-        
-<<<<<<< HEAD
-        #     # stop if the NEATO is within half a meter of obstacle
-        #     if (distance < .7) and (distance > 0):
-        #         self.obstacle = True
-        #         msg = Twist(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, 0.2))
-        #         self.pub.publish(msg)
-        #     else:
-        #         self.obstacle = False
-=======
+        # distance between NEATO and obstacle
+        if sum(laserscan)/float(len(laserscan)) > 0:
+            distance = sum(laserscan)/float(len(laserscan))
+
             # stop if the NEATO is within half a meter of obstacle
-            if (distance < .7) and (distance > 0):
+            if (distance < .2) and (distance > 0):
                 self.obstacle = True
                 self.vel = 0.0
-                self.turn - 0.2
+                self.turn = 0.2
             else:
                 self.obstacle = False
->>>>>>> 766f3fcd4dde81ecf73005cc349a638609c8a1fe
 
     def run(self):
         # while self.color == False and self.obstacle == False:
