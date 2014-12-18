@@ -114,19 +114,19 @@ class Nellie():
             if len(fl)>0 and sum(fl)/float(len(fl))>0:
                 distance_l = sum(fl)/float(len(fl))
 
-            if (distance_r < .7) and (distance_r > 0):
+            if (distance_r < 1) and (distance_r > 0):
                 self.vel = 0.0
                 self.turn = 0.2
                 self.obstacle = True
                 print('left')
 
-            elif (distance_l < .7) and (distance_l > 0):
+            elif (distance_l < 1) and (distance_l > 0):
                 self.vel = 0.0
                 self.turn = -0.2
                 self.obstacle = True
                 print('right')
 
-            elif (distance_l>0.69) and (distance_r>0.69) and (self.obstacle==True):
+            elif (distance_l>0.99) and (distance_r>0.99) and (self.obstacle==True):
                 self.vel = 0.0
                 self.turn = 0.0
                 self.obstacle = False

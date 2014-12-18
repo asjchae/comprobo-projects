@@ -1,0 +1,38 @@
+﻿Final Project Writeup
+Intro to Computational Robotics
+Ariana Chae and Sharon Grimshaw
+
+
+What was the goal of your project?
+For our final project, we created a NEATO vacuum version of a voice-driven car. We wanted to be able to drive the NEATO using voice commands, but give the NEATO certain visual cues that would override the voice commands to elicit a certain behavior. The visual cues we wanted to teach it were colors and obstacles, to simulate a stop sign and a tree or accident in the car’s path.
+
+
+How did you solve the problem?
+We broke up the problem into three separate pieces - voice recognition, color detection, and obstacle avoidance. We then integrated these three parts so that the NEATO was always avoiding obstacles, would react to color if there were no obstacles to avoid, and would react to voice commands if there was no color to obey or obstacles to avoid.
+        For voice recognition, we used the SpeechRecognition 1.1.2 library for performing speech recognition with the Google Speech Recognition API to translate from voice commands to a string of text. We chose to use the computer’s microphone to capture the audio so that we didn’t need to attach a microphone to the NEATO. All of the audio detection and processing is done on the computer, and we translate the output string into a Twist command that is sent to the robot to make it move. Our code only listens for certain voice commands, such as “go forward” and “turn right.”
+        For color detection, we used cv_bridge to convert from ROS images to CV images, and then used inRange to find the hue that we were looking for. In our case, we were looking for a red stop sign. We then used time.sleep to have the robot pause for two seconds at the stop sign before continuing forward.
+        For obstacle avoidance, we used the LIDAR to detect obstacles and then had the NEATO turn until the obstacle was no longer in front of it. To find the obstacle, we averaged the points in front of the NEATO and then avoided if the obstacle was within a minimum distance to the NEATO.
+
+
+Describe a design decision you had to make when working on your project and what you ultimately did (and why)?
+We chose to use the computer microphone to capture the audio data instead of our original plan, which was to add a microphone to the NEATO. That way, we didn’t need to do the audio processing on the NEATO or transmit the audio data across WiFi.
+
+
+How did you structure your code?
+We broke the three components we included (voice recognition, color detection, and obstacle avoidance) into three separate functions and integrated these together via a series of booleans. This was how we told the NEATO what was most important to follow. For example, the voice recognition function would only trigger if both the obstacle detection and the color detection booleans showed up as False.
+We were originally going to put them all in different classes, but in the end the code wasn’t complex enough to require that. We simply put them in separate functions within the same class.
+
+
+What if any challenges did you face along the way?
+We had a lot of trouble getting the voice recognition code to work reliably. We had a basic version of it working after the first week or so, but we continued to have problems with it hearing our voices and processing the commands in time to avoid things, and sometimes even getting the code to run at all.
+        We also had trouble getting the NEATO to pause only once for the stop sign. Since the images need to be processed, the camera would freeze while processing the red stop sign and then pull up the next image in the queue, which would still be of the red stop sign even if the sign had been removed. We forced the camera to take a image from farther along the queue to avoid this problem.
+
+
+What would you do to improve your project if you had more time?
+Given more time, we would use edge detection to detect only red octagons (stop signs) instead of reacting to every red thing the NEATO sees. Since we are using inRange, any object with a hue similar to the one we are looking for will trigger the stopping behavior in the NEATO.
+We would also make our obstacle avoidance code more robust and perhaps include a memory component so that the NEATO could go around an obstacle and then continue toward a pre-determined destination point. Currently, our obstacle avoidance code only has the NEATO turn until the obstacle is no longer in front, but does not remember the previous command that the NEATO was executing before the obstacle avoidance code was triggered.
+
+
+Did you learn any interesting lessons for future robotic programming projects?
+We learned that it was very important to set goals for what we got done each week. In the project proposal we outlined what we expected to tackle each week. While we didn’t stick directly to this plan, it helped us to stay on track so that at the end of the project we had at least an MVP for each of the three components.
+        We also learned that the wireless connection can play a large part in how code works. Our robot would often not respond to our commands or to the visual cues because it took too long for it to process and send the command back to the NEATO through the wireless. Bad wireless also presented a challenge when debugging, because it wouldn’t necessarily be a problem with our code.
