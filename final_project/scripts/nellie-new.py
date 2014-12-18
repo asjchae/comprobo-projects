@@ -32,6 +32,9 @@ class Nellie():
         self.vel = 0.0
         self.turn = 0.0
 
+
+        self.next_frame_to_process = -1
+
     def camera(self, msg):
 
         if self.color is True:
@@ -45,6 +48,9 @@ class Nellie():
             except CvBridgeError, e:
                 print e
 
+            
+            cv2.imshow('current_image', self.cv_image)
+            
             # using a BGR range to detect red
             # lowerR = np.array([0,0,150], "uint8")
             # upperR = np.array([50,50,255], "uint8")       
@@ -77,11 +83,12 @@ class Nellie():
 
             if self.color == True:
                 # Stop for two seconds.
+                self.vel = 0.0
+                self.turn = 0.0
+                msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
+                self.pub.publish(msg)                
                 time.sleep(2)
-                self.vel = 0.0
-                self.turn = 0.4
-                time.sleep(5)
-                self.vel = 0.0
+                self.vel = 0.2
                 self.turn = 0.0
                 self.color = False
             else:
@@ -93,22 +100,13 @@ class Nellie():
         fl = [] # front left
         distance_l = 0.0
         distance_r = 0.0
-        
-        right = []
-        left = []
 
         # averaging the laser scan points in front of the NEATO
         for i in range(30):
-            if msg.ranges[330+i] > 0:
+            if msg.ranges[329+i] > 0:
                 fr.append(msg.ranges[329+i])
             if msg.ranges[30-i] > 0:
                 fl.append(msg.ranges[30-i])
-
-        for i in range(60):
-            if msg.ranges[60-i] > 0:
-                right.append(msg.ranges[60-i])
-            if msg.ranges[300+i] > 0:
-                left.append(msg.ranges[300+i])
 
         if (len(fr)>0 and sum(fr)/float(len(fr))>0) or (len(fl)>0 and sum(fl)/float(len(fl))>0):
             if len(fr)>0 and sum(fr)/float(len(fr))>0:
@@ -117,40 +115,38 @@ class Nellie():
                 distance_l = sum(fl)/float(len(fl))
 
             if (distance_r < .7) and (distance_r > 0):
-                # If it is turning left
-                obstacleTracker = msg.ranges[330+i].append(msg.ranges[30-i])
-                while right != obstacleTracker:                    
-                    self.vel = 0.0
-                    self.turn = 0.2
-                    msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
-                    self.pub.publish(msg)                    
+                self.vel = 0.0
+                self.turn = 0.2
+                self.obstacle = True
+                print('left')
 
             elif (distance_l < .7) and (distance_l > 0):
-                obstacleTracker = msg.ranges[330+i].append(msg.ranges[30-i])
-                while left != obstacleTracker:
-                    self.vel = 0.0
-                    self.turn = -0.2
-                    msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
-                    self.pub.publish(msg)  
+                self.vel = 0.0
+                self.turn = -0.2
+                self.obstacle = True
+                print('right')
 
-            # elif (distance_l>0.69) and (distance_r>0.69) and (self.obstacle==True):
-            #     self.vel = 0.0
-            #     self.turn = 0.0
+            elif (distance_l>0.69) and (distance_r>0.69) and (self.obstacle==True):
+                self.vel = 0.0
+                self.turn = 0.0
+                self.obstacle = False
             else:
                 self.obstacle = False
+        # print(distance_l,distance_r)
 
     def run(self):
         # while self.color == False and self.obstacle == False:
         #     self.audio = audio(self)
 
         r = rospy.Rate(10) # 10hz
-
         while not rospy.is_shutdown():
             if self.color == False and self.obstacle == False:
                 self.audio = audio(self)
-            #cv2.waitKey(3)
+            cv2.waitKey(3)
             msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
+            # msg=Twist(Vector3(0,0.0,0.0),Vector3(0.0,0.0,0))
             self.pub.publish(msg)
+            print(self.vel, self.turn)
             r.sleep()
 
 def audio(self):
@@ -161,6 +157,14 @@ def audio(self):
 
     print command
     if command == "go straight":
+        # Code to go straight
+        self.vel = 0.2
+        self.turn = 0.0
+    elif command == "go forward":
+        # Code to go straight
+        self.vel = 0.2
+        self.turn = 0.0
+    elif command == "onward":
         # Code to go straight
         self.vel = 0.2
         self.turn = 0.0
@@ -177,6 +181,10 @@ def audio(self):
         self.vel = 0.0
         self.turn = -0.2
     elif command == "stop":
+        # Code to stop
+        self.vel = 0.0
+        self.turn = 0.0
+    elif command == "bad robot":
         # Code to stop
         self.vel = 0.0
         self.turn = 0.0
