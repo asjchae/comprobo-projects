@@ -18,33 +18,35 @@ import datetime
 class Nellie():
 
     def __init__(self):
-        # Initializing Nellie
         rospy.init_node('nellie', anonymous = True)
         self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
         self.sub = rospy.Subscriber('/camera/image_raw', Image, self.camera)
         self.sub = rospy.Subscriber('scan', LaserScan, self.laser)
 
-        # Image variables
         self.bridge = CvBridge()
         self.cv_image = Image()
-        self.next_frame_to_process = -1
 
-        # Boolean variables to define state
         self.obstacle = False
         self.color = False
 
-        # Constantly updating velocity and turn variables
+        self.r = sr.Recognizer()
+        self.source = sr.Microphone()
+
         self.vel = 0.0
         self.turn = 0.0
 
+
+        self.next_frame_to_process = -1
+
     def camera(self, msg):
-        # Color detection function
         try:
             self.cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
         except CvBridgeError, e:
             print e
-
+   #     print "showing current image"
+        cv2.imshow('current_image', self.cv_image)
         cv2.waitKey(15)
+        #print self.color
         if self.color is True:
             # Already saw the Stop sign, doesn't need to look for it again
             pass
@@ -52,7 +54,9 @@ class Nellie():
         elif self.obstacle is False and self.color is False:
             # Check to see if there is a Stop sign
  
-            # using a BGR range to detect red      
+            # using a BGR range to detect red
+            # lowerR = np.array([0,0,150], "uint8")
+            # upperR = np.array([50,50,255], "uint8")       
             lowerR = np.array([2,0,85], "uint8")
             upperR = np.array([65,71,215], "uint8")
 
@@ -81,20 +85,21 @@ class Nellie():
                     break
 
             if self.color == True:
-                # Pause before continuing to move
+                # Stop for two seconds.
                 self.vel = 0.0
                 self.turn = 0.0
                 msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))
+              #  print "publishing message!"
                 self.pub.publish(msg)    
-                time.sleep(.5)
+                time.sleep(2)
                 self.vel = 0.2
                 self.turn = 0.0
                 self.color = False
             else:
                 return
 
+    # Stops if it sees an obstacle.
     def laser(self, msg):
-        # Obstacle avoidance function
         fr = [] # front right
         fl = [] # front left
         distance_l = 0.0
@@ -108,51 +113,46 @@ class Nellie():
                 fl.append(msg.ranges[30-i])
 
         if (len(fr)>0 and sum(fr)/float(len(fr))>0) or (len(fl)>0 and sum(fl)/float(len(fl))>0):
-            # find the distance to the nearest obstacle
             if len(fr)>0 and sum(fr)/float(len(fr))>0:
                 distance_r = sum(fr)/float(len(fr))
             if len(fl)>0 and sum(fl)/float(len(fl))>0:
                 distance_l = sum(fl)/float(len(fl))
 
-            # if the obstacle is too close, turn
             if (distance_r < 1) and (distance_r > 0):
                 self.vel = 0.0
                 self.turn = 0.2
                 self.obstacle = True
                 print('left')
+
             elif (distance_l < 1) and (distance_l > 0):
                 self.vel = 0.0
                 self.turn = -0.2
                 self.obstacle = True
                 print('right')
 
-            # if it has finished avoiding obstacles, stop and wait for the next command
             elif (distance_l>0.99) and (distance_r>0.99) and (self.obstacle==True):
                 self.vel = 0.0
                 self.turn = 0.0
                 self.obstacle = False
-
             else:
                 self.obstacle = False
+        # print(distance_l,distance_r)
 
     def run(self):
         r = rospy.Rate(10) # 10hz
         while not rospy.is_shutdown():
             if self.color == False and self.obstacle == False:
-                # check if there are any visual cues, if not do the voice recognition
                 self.audio = audio(self)
             cv2.waitKey(15)
-            msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))   
+            msg=Twist(Vector3(self.vel,0.0,0.0),Vector3(0.0,0.0,self.turn))     
             self.pub.publish(msg)
+            #print(self.vel, self.turn)
             r.sleep()
 
 def audio(self):
-    # Voice recognition function
-    r = sr.Recognizer()
-
-    with sr.Microphone() as source:
-        my_audio = r.listen(source)
-        command = r.recognize(my_audio)
+    with self.source as source:
+        my_audio = self.r.listen(source)
+        command = self.r.recognize(my_audio)
 
     print command
     if command == "go straight":
@@ -160,6 +160,10 @@ def audio(self):
         self.vel = 0.2
         self.turn = 0.0
     elif command == "go forward":
+        # Code to go straight
+        self.vel = 0.2
+        self.turn = 0.0
+    elif command == "onward":
         # Code to go straight
         self.vel = 0.2
         self.turn = 0.0
